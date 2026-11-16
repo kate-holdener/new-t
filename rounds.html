@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-page="rounds">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rounds</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1 id="t-name">Loading&hellip;</h1>
+    <p id="t-meta"></p>
+  </header>
+  <nav class="site-nav" aria-label="Site navigation">
+    <a href="index.html" data-page="info">Info</a>
+    <a href="rounds.html" data-page="rounds">Rounds</a>
+    <a href="standings.html" data-page="standings">Standings</a>
+  </nav>
+  <main>
+    <div id="section-tabs" class="section-tabs"></div>
+    <div id="round-nav">
+      <button id="prev-round" disabled aria-label="Previous round">&lsaquo;</button>
+      <span id="round-label"></span>
+      <button id="next-round" disabled aria-label="Next round">&rsaquo;</button>
+    </div>
+    <div id="rounds-content"><p class="loading">Loading&hellip;</p></div>
+  </main>
+  <script>const DATA_BASE = 'https://raw.githubusercontent.com/kate-holdener/new-t/data';</script>
+  <script src="site.js"></script>
+  <script>
+    let tournament = null;
+    let currentSection = null;
+    let currentRound = 1;
+    const cache = {};
+
+    function updateNav() {
+      const max = currentSection ? currentSection.rounds_complete : 0;
+      document.getElementById('round-label').textContent =
+        'Round ' + currentRound + ' of ' + tournament.number_of_rounds;
+      document.getElementById('prev-round').disabled = currentRound <= 1;
+      document.getElementById('next-round').disabled = currentRound >= max;
+    }
+
+    async function loadRound(n) {
+      const slug = currentSection.slug;
+      const key = slug + '-' + n;
+      const el = document.getElementById('rounds-content');
+      el.innerHTML = '<p class="loading">Loading&hellip;</p>';
+      try {
+        if (!cache[key]) cache[key] = await fetchJson(DATA_BASE + '/sections/' + slug + '/round-' + n + '.json');
+        const data = cache[key];
+        if (!data.pairings.length) { el.innerHTML = '<p class="loading">No pairings yet.</p>'; return; }
+        const rows = data.pairings.map(p => {
+          const res = p.result === null
+            ? '<span class="pending">—</span>'
+            : p.result === '1/2-1/2' ? '½–½' : p.result;
+          return '<tr>' +
+            '<td class="board">' + p.board + '</td>' +
+            '<td>' + esc(p.white_name) + '</td>' +
+            '<td class="rating">' + (p.white_rating ?? '') + '</td>' +
+            '<td class="result">' + res + '</td>' +
+            '<td class="rating">' + (p.black_rating ?? '') + '</td>' +
+            '<td>' + esc(p.black_name) + '</td>' +
+            '</tr>';
+        }).join('');
+        const bye = data.bye ? '<p class="bye-note">Bye: ' + esc(data.bye) + '</p>' : '';
+        el.innerHTML =
+          '<table><thead><tr>' +
+            '<th class="board">Board</th><th>White</th><th class="rating">Rating</th>' +
+            '<th class="result">Result</th><th class="rating">Rating</th><th>Black</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>' + bye;
+      } catch (e) {
+        el.innerHTML = '<p class="error">Could not load round ' + n + '.</p>';
+      }
+    }
+
+    document.getElementById('prev-round').addEventListener('click', () => {
+      if (currentRound > 1) { currentRound--; updateNav(); loadRound(currentRound); }
+    });
+    document.getElementById('next-round').addEventListener('click', () => {
+      if (currentRound < currentSection.rounds_complete) { currentRound++; updateNav(); loadRound(currentRound); }
+    });
+
+    fetchJson(DATA_BASE + '/tournament.json').then(t => {
+      tournament = t;
+      document.title = t.name + ' – Rounds';
+      document.getElementById('t-name').textContent = t.name;
+      document.getElementById('t-meta').textContent =
+        t.start_date + ' · Swiss · ' + t.number_of_rounds + ' rounds';
+      currentSection = t.sections[0];
+      currentRound = Math.max(currentSection.rounds_complete, 1);
+      buildSectionTabs('section-tabs', t.sections, s => {
+        currentSection = s;
+        currentRound = Math.max(s.rounds_complete, 1);
+        updateNav();
+        loadRound(currentRound);
+      });
+      updateNav();
+      loadRound(currentRound);
+    }).catch(() => {
+      document.getElementById('rounds-content').innerHTML =
+        '<p class="error">Could not load tournament data.</p>';
+    });
+  </script>
+</body>
+</html>
