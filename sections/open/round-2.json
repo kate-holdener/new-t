@@ -1,0 +1,55 @@
+{
+  "round": 2,
+  "complete": true,
+  "pairings": [
+    {
+      "board": 1,
+      "white_name": "Ceres Altair",
+      "white_rating": 820,
+      "black_name": "Jupiter Betelgeuse",
+      "black_rating": 2000,
+      "result": "1-0"
+    },
+    {
+      "board": 2,
+      "white_name": "Eris Deneb",
+      "white_rating": 675,
+      "black_name": "Mars Antares",
+      "black_rating": 1725,
+      "result": "0-1"
+    },
+    {
+      "board": 3,
+      "white_name": "Saturn Rigel",
+      "white_rating": 1850,
+      "black_name": "Makemake Regulus",
+      "black_rating": 510,
+      "result": "1/2-1/2"
+    },
+    {
+      "board": 4,
+      "white_name": "Venus Sirius",
+      "white_rating": 1610,
+      "black_name": "Pluto Pollux",
+      "black_rating": 1080,
+      "result": "1/2-1/2"
+    },
+    {
+      "board": 5,
+      "white_name": "Mercury Canopus",
+      "white_rating": 1215,
+      "black_name": "Neptune Vega",
+      "black_rating": 1490,
+      "result": "0-1"
+    },
+    {
+      "board": 6,
+      "white_name": "Uranus Arcturus",
+      "white_rating": 1330,
+      "black_name": "Earth Spica",
+      "black_rating": 950,
+      "result": "0-1"
+    }
+  ],
+  "bye": null
+}
