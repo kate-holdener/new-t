@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-page="standings">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Standings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1 id="t-name">Loading&hellip;</h1>
+    <p id="t-meta"></p>
+  </header>
+  <nav class="site-nav" aria-label="Site navigation">
+    <a href="index.html" data-page="info">Info</a>
+    <a href="rounds.html" data-page="rounds">Rounds</a>
+    <a href="standings.html" data-page="standings">Standings</a>
+  </nav>
+  <main>
+    <div id="section-tabs" class="section-tabs"></div>
+    <div id="standings-content"><p class="loading">Loading&hellip;</p></div>
+  </main>
+  <script>const DATA_BASE = 'https://raw.githubusercontent.com/kate-holdener/new-t/data';</script>
+  <script src="site.js"></script>
+  <script>
+    const cache = {};
+
+    async function loadStandings(slug) {
+      const el = document.getElementById('standings-content');
+      if (cache[slug]) { renderStandings(cache[slug], el); return; }
+      el.innerHTML = '<p class="loading">Loading&hellip;</p>';
+      try {
+        cache[slug] = await fetchJson(DATA_BASE + '/sections/' + slug + '/standings.json');
+        renderStandings(cache[slug], el);
+      } catch (e) {
+        el.innerHTML = '<p class="error">Could not load standings.</p>';
+      }
+    }
+
+    function renderStandings(data, el) {
+      if (!data.standings.length) { el.innerHTML = '<p class="loading">No standings yet.</p>'; return; }
+      const tbHeaders = data.tie_breaker_labels.map(l => '<th class="tb">' + esc(l) + '</th>').join('');
+      const rows = data.standings.map(e => {
+        const tbCells = e.tie_breaker_scores.map(s => '<td class="tb">' + s.toFixed(1) + '</td>').join('');
+        return '<tr>' +
+          '<td class="rank">' + e.rank + '</td>' +
+          '<td>' + esc(e.name) + '</td>' +
+          '<td class="rating">' + (e.rating != null ? e.rating : 'unr.') + '</td>' +
+          '<td class="score">' + fmtScore(e.points) + '</td>' +
+          '<td class="wdl">' + e.wins + '–' + e.draws + '–' + e.losses + '</td>' +
+          tbCells + '</tr>';
+      }).join('');
+      const asOf = data.as_of_round > 0 ? ' after round ' + data.as_of_round : '';
+      el.innerHTML =
+        '<p class="standings-note">Standings' + asOf + '</p>' +
+        '<table><thead><tr>' +
+          '<th class="rank">#</th><th>Name</th><th class="rating">Rating</th>' +
+          '<th class="score">Pts</th><th class="wdl">W–D–L</th>' +
+          tbHeaders +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    fetchJson(DATA_BASE + '/tournament.json').then(t => {
+      document.title = t.name + ' – Standings';
+      document.getElementById('t-name').textContent = t.name;
+      document.getElementById('t-meta').textContent =
+        t.start_date + ' · Swiss · ' + t.number_of_rounds + ' rounds';
+      buildSectionTabs('section-tabs', t.sections, s => loadStandings(s.slug));
+      loadStandings(t.sections[0].slug);
+    }).catch(() => {
+      document.getElementById('standings-content').innerHTML =
+        '<p class="error">Could not load tournament data.</p>';
+    });
+  </script>
+</body>
+</html>
