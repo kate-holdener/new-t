@@ -1,0 +1,13 @@
+{
+  "name": "New T",
+  "start_date": "2026-11-13",
+  "number_of_rounds": 3,
+  "sections": [
+    {
+      "name": "Open",
+      "slug": "open",
+      "player_count": 12,
+      "rounds_complete": 3
+    }
+  ]
+}
